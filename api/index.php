@@ -7,7 +7,8 @@ $app = new Slim();
 
 //Routes
 $app->get('/books', 'getBooks');
-$app->get('/book/:id', 'getBook');
+$app->get('/books/:id', 'getBook');
+$app->get('/books/search/:filter', 'searchBook');
 
 //Run the app
 $app->run();
@@ -19,9 +20,9 @@ function getBooks(){
     $db = getConnection();
     $stmt = $db->prepare($sql);
     $stmt->execute();
-    $books = $stmt->fetchObject();
+    $books = $stmt->fetchAll();
     $db = null;
-    echo json_encode($books);
+    echo '{"book": ' . json_encode($books) . '}';
   } catch(PDOException $e) {
   	echo '{"error": {"text":' . $e->getMessage() .'}}';
   }
@@ -42,13 +43,35 @@ function getBook($id){
   }
 }
 
+function searchBook($filter){
+  if ($filter == "") {
+    echo '{"error": {"text":"you must specify a filter."}}'; 
+    return; 
+  }
+
+  $sql = "SELECT id, name FROM book WHERE name like :filter";
+  try {
+    $db = getConnection();
+    $stmt = $db->prepare($sql);
+    $filter = "%".$filter."%";
+    $stmt->bindParam("filter", $filter);
+    $stmt->execute();
+    $books = $stmt->fetchAll();
+    $db = null;
+    echo '{"book": ' . json_encode($books) . '}';
+  } catch (PDOException $e) {
+    echo '{"error": {"text":' . $e->getMessage() . '}}';
+  }
+}
+
 //DB
 function getConnection(){
 	$dbhost="127.0.0.1";
 	$dbuser="root";
 	$dbpass="root";
 	$dbname="booklistapp";
-	$dbh = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbuser, $dbpass);	
+  $dbport=8889;
+	$dbh = new PDO("mysql:host=$dbhost;dbname=$dbname;port=$dbport", $dbuser, $dbpass);	
 	$dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 	return $dbh;
 }
