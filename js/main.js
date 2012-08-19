@@ -6,10 +6,23 @@ var currentBook;
 // Retrieve wine list when application starts 
 findAll();
 
+// Nothing to delete in initial application state
+$('#btnDelete').hide();
+
 // Register listeners
 $('#btnSearch').click(function() {
 	search($('#searchKey').val());
 	return false;
+});
+
+$('#btnSave').click(function() {
+  $data = updateBook();
+  return false;
+});
+
+$('#btnDelete').click(function() {
+  deleteBook();
+  return false;
 });
 
 // Trigger search when pressing 'Return' on search key input field
@@ -64,6 +77,40 @@ function findById(id) {
 			currentBook = data;
 			renderDetails(currentBook);
 		}
+	});
+}
+
+function updateBook(){
+	console.log('updateBook: ' + $('#bookId').val());
+	$.ajax({
+        type: 'PUT',
+        contentType: 'application/json',
+        url: rootURL + '/' + $('#bookId').val(),
+        dataType: "json",
+        data: formToJSON(),
+        success: function(data, textStatus, jqXHR){
+        	alert('Book updated successfully.');
+        	//Update the book list on the webpage
+        	renderList(data);
+        },
+        error: function(jqXHR, textStatus, errorThrown){
+            alert('updateBook error: ' + textStatus);
+        }
+	});
+}
+
+function deleteBook(){
+	console.log('deleteBook: ' + $('#bookId').val());
+	$.ajax({
+        type: 'DELETE',
+        contentType: 'application/json',
+        url: rootURL + '/' + $('#bookId').val(),
+        success: function(data, textStatus, jqXHR){
+        	alert('Book deleted successfully.');
+        },
+        error: function(jqXHR, textStatus, errorThrown){
+            alert('deleteBook error: ' + textStatus);
+        }
 	});
 }
 
